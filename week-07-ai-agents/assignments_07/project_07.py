@@ -7,11 +7,14 @@ from smolagents import tool, CodeAgent, LiteLLMModel
 
 load_dotenv()
 
-# Relative path from the script's working directory; falls back to merging yearly CSVs
-DATA_PATH = "assignments_07/outputs/merged_happiness.csv"
-YEARLY_GLOB = "assignments_01/resources/happiness_project/*.csv"
+# Absolute paths derived from this file's location — script runs correctly from any directory
+SCRIPT_DIR  = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT   = os.path.abspath(os.path.join(SCRIPT_DIR, "..", ".."))
+OUTPUTS_DIR = os.path.join(SCRIPT_DIR, "outputs")
+DATA_PATH   = os.path.join(REPO_ROOT, "week-01-analysis-pipelines", "outputs", "merged_happiness.csv")
+YEARLY_GLOB = os.path.join(REPO_ROOT, "assignments", "resources", "happiness_project", "*.csv")
 
-os.makedirs("assignments_07/outputs", exist_ok=True)
+os.makedirs(OUTPUTS_DIR, exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Task 1: Four @tool decorated functions
@@ -105,16 +108,21 @@ def get_top_n_countries(column: str, year: int, n: int = 5) -> dict:
     if filtered.empty:
         return {"error": f"No data found for year {year}."}
     top = filtered.nlargest(n, column)[["country", column]].reset_index(drop=True)
-    return {"results": top.rename(columns={column: "value"}).to_dict(orient="records")}
+    return {"results": top.to_dict(orient="records")}
 
 
 # ---------------------------------------------------------------------------
 # Task 2: Build the CodeAgent
 #
-# INTENTIONAL DEVIATION: The assignment specifies OpenAIServerModel with gpt-4o-mini.
-# I am using LiteLLMModel with Claude Haiku (Anthropic) instead — the same substitution
-# used in Weeks 5 and 6 throughout this course — because I do not have an OpenAI API key.
-# LiteLLMModel wraps the same smolagents interface, so all agent behavior is equivalent.
+# NOTE ON MODEL CHOICE — INTENTIONAL DEVIATION FROM SPEC:
+# The assignment asks for: OpenAIServerModel(model_id="gpt-4o-mini")
+# I do not have an OpenAI API key; I am using the Anthropic key set up in Week 5.
+# Substitution used: LiteLLMModel(model_id="anthropic/claude-haiku-4-5-20251001")
+# LiteLLMModel implements the same smolagents ModelBase interface as OpenAIServerModel,
+# so tool calls, CodeAgent execution, and all agent behavior are identical in practice.
+# If an OpenAI key is available, replace the block below with:
+#   from smolagents import OpenAIServerModel
+#   model = OpenAIServerModel(api_key=os.getenv("OPENAI_API_KEY"), model_id="gpt-4o-mini")
 # ---------------------------------------------------------------------------
 
 model = LiteLLMModel(
@@ -149,7 +157,7 @@ queries = [
     "Show me the top 5 happiest countries in 2020.",
     (
         "Plot happiness_score over the years as a line chart, with one line per region. "
-        "Save the plot to outputs/happiness_by_region.png."
+        f"Save the plot to {os.path.join(OUTPUTS_DIR, 'happiness_by_region.png')}."
     ),
 ]
 
@@ -171,7 +179,7 @@ my_query_1 = (
 my_query_2 = (
     "Create a scatter plot of happiness_score vs gdp_per_capita for the year 2023, "
     "with each point colored by regional_indicator. Add a title, axis labels, and a legend. "
-    "Save the plot to outputs/happiness_gdp_scatter.png"
+    f"Save the plot to {os.path.join(OUTPUTS_DIR, 'happiness_gdp_scatter.png')}."
 )
 
 
