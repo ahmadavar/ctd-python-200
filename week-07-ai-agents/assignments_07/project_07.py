@@ -1,4 +1,5 @@
 import os
+import glob
 import pandas as pd
 from scipy import stats
 from dotenv import load_dotenv
@@ -6,93 +7,114 @@ from smolagents import tool, CodeAgent, LiteLLMModel
 
 load_dotenv()
 
-DATA_PATH = os.path.expanduser(
-    "~/ctd-python-200/week-01-analysis-pipelines/outputs/merged_happiness.csv"
-)
+# Relative path from the script's working directory; falls back to merging yearly CSVs
+DATA_PATH = "assignments_07/outputs/merged_happiness.csv"
+YEARLY_GLOB = "assignments_01/resources/happiness_project/*.csv"
+
+os.makedirs("assignments_07/outputs", exist_ok=True)
 
 # ---------------------------------------------------------------------------
 # Task 1: Four @tool decorated functions
 # ---------------------------------------------------------------------------
 
 @tool
-def load_happiness_data() -> str:
-    """Load the World Happiness dataset and return a summary of its structure.
+def load_happiness_data() -> dict:
+    """Load the World Happiness dataset into memory and return its structure.
+
+    Loads from a pre-merged CSV if it exists; otherwise merges all yearly CSVs
+    found in the assignments_01/resources/happiness_project/ directory.
 
     Returns:
-        A string describing the shape, columns, years available, and sample rows.
+        A dict with keys 'shape' (tuple), 'columns' (list of str), and
+        'years' (list of int) describing the loaded dataset.
     """
-    df = pd.read_csv(DATA_PATH)
+    if os.path.exists(DATA_PATH):
+        df = pd.read_csv(DATA_PATH)
+    else:
+        yearly_files = sorted(glob.glob(YEARLY_GLOB))
+        if not yearly_files:
+            return {"error": f"No data found at {DATA_PATH} or {YEARLY_GLOB}"}
+        df = pd.concat([pd.read_csv(f) for f in yearly_files], ignore_index=True)
+        df.to_csv(DATA_PATH, index=False)
     years = sorted(df["year"].dropna().unique().astype(int).tolist())
-    summary = (
-        f"Dataset shape: {df.shape[0]} rows x {df.shape[1]} columns\n"
-        f"Columns: {df.columns.tolist()}\n"
-        f"Years available: {years}\n"
-        f"Sample (first 3 rows):\n{df.head(3).to_string(index=False)}"
-    )
-    return summary
+    return {"shape": list(df.shape), "columns": df.columns.tolist(), "years": years}
 
 
 @tool
-def summarize_column(column: str) -> str:
+def summarize_column(column: str) -> dict:
     """Return descriptive statistics for a numeric column in the happiness dataset.
 
     Args:
         column: The name of the numeric column to summarize (e.g. 'happiness_score').
 
     Returns:
-        A string with count, mean, std, min, and max for the column.
+        A dict containing the describe() statistics for the column, or an error key
+        if the column is not found or no data is loaded.
     """
+    if not os.path.exists(DATA_PATH):
+        return {"error": "No data loaded. Call load_happiness_data first."}
     df = pd.read_csv(DATA_PATH)
     if column not in df.columns:
-        return f"Column '{column}' not found. Available: {df.columns.tolist()}"
-    stats_series = df[column].describe()
-    return f"Stats for '{column}':\n{stats_series.to_string()}"
+        return {"error": f"Column '{column}' not found. Available: {df.columns.tolist()}"}
+    return df[column].describe().round(4).to_dict()
 
 
 @tool
-def compute_correlation(column_a: str, column_b: str) -> str:
-    """Compute the Pearson correlation between two numeric columns in the happiness dataset.
+def compute_correlation(col1: str, col2: str) -> dict:
+    """Compute the Pearson correlation coefficient and p-value between two numeric columns.
 
     Args:
-        column_a: First numeric column name.
-        column_b: Second numeric column name.
+        col1: First numeric column name.
+        col2: Second numeric column name.
 
     Returns:
-        A string with the Pearson r value and p-value.
+        A dict with keys 'col1', 'col2', 'pearson_r', and 'p_value' (floats rounded to
+        4 decimal places), or an error key if a column is missing or data is not loaded.
     """
-    df = pd.read_csv(DATA_PATH).dropna(subset=[column_a, column_b])
-    if column_a not in df.columns:
-        return f"Column '{column_a}' not found."
-    if column_b not in df.columns:
-        return f"Column '{column_b}' not found."
-    r, p = stats.pearsonr(df[column_a], df[column_b])
-    return f"Pearson r({column_a}, {column_b}) = {r:.4f}, p-value = {p:.4e}"
+    if not os.path.exists(DATA_PATH):
+        return {"error": "No data loaded. Call load_happiness_data first."}
+    df = pd.read_csv(DATA_PATH)
+    if col1 not in df.columns:
+        return {"error": f"Column '{col1}' not found."}
+    if col2 not in df.columns:
+        return {"error": f"Column '{col2}' not found."}
+    df = df.dropna(subset=[col1, col2])
+    r, p = stats.pearsonr(df[col1], df[col2])
+    return {"col1": col1, "col2": col2, "pearson_r": round(r, 4), "p_value": round(p, 4)}
 
 
 @tool
-def get_top_n_countries(column: str, year: int, n: int = 5) -> str:
+def get_top_n_countries(column: str, year: int, n: int = 5) -> dict:
     """Return the top N countries ranked by a given column for a specific year.
 
     Args:
         column: The numeric column to rank by (e.g. 'happiness_score').
         year: The year to filter on (e.g. 2019).
-        n: Number of top countries to return.
+        n: Number of top countries to return (default 5).
 
     Returns:
-        A string listing the top N countries and their values for that column and year.
+        A dict with key 'results' containing a list of dicts, each with 'country'
+        and the requested column value. Returns an error key on bad input.
     """
+    if not os.path.exists(DATA_PATH):
+        return {"error": "No data loaded. Call load_happiness_data first."}
     df = pd.read_csv(DATA_PATH)
+    if column not in df.columns:
+        return {"error": f"Column '{column}' not found."}
     filtered = df[df["year"] == year].dropna(subset=[column])
     if filtered.empty:
-        return f"No data found for year {year}."
+        return {"error": f"No data found for year {year}."}
     top = filtered.nlargest(n, column)[["country", column]].reset_index(drop=True)
-    return f"Top {n} countries by '{column}' in {year}:\n{top.to_string(index=False)}"
+    return {"results": top.rename(columns={column: "value"}).to_dict(orient="records")}
 
 
 # ---------------------------------------------------------------------------
 # Task 2: Build the CodeAgent
-# Using LiteLLMModel with Claude Haiku instead of OpenAIServerModel —
-# same swap used in Weeks 5 and 6 throughout this course.
+#
+# INTENTIONAL DEVIATION: The assignment specifies OpenAIServerModel with gpt-4o-mini.
+# I am using LiteLLMModel with Claude Haiku (Anthropic) instead — the same substitution
+# used in Weeks 5 and 6 throughout this course — because I do not have an OpenAI API key.
+# LiteLLMModel wraps the same smolagents interface, so all agent behavior is equivalent.
 # ---------------------------------------------------------------------------
 
 model = LiteLLMModel(

@@ -35,10 +35,9 @@ celsius_to_fahrenheit_schema = {
     }
 }
 
-# Direct calls — no agent yet
+# Direct calls — the function already returns a formatted string, so just print it
 for temp in [0, 100, -40]:
-    result = celsius_to_fahrenheit(temp)
-    print(f"{temp}°C = {result}°F")
+    print(celsius_to_fahrenheit(temp))
 
 # ---------------------------------------------------------------------------
 # Q2: run_agent with get_current_time only — test with a Celsius query
@@ -233,29 +232,29 @@ reply, messages = run_agent(
     tool_functions=csv_functions
 )
 
+# Each role in the ReAct loop:
+# role=system    — the standing instruction given to the model before the conversation starts
+# role=user      — either the human's original question OR a tool_result (the observation
+#                  returned after running a tool — sent back as a user turn because the API
+#                  requires alternating user/assistant messages)
+# role=assistant — either a tool_use block (the model decides which tool to call and with
+#                  what args) or a final text block (the model has enough info to answer)
+# role=tool      — in some frameworks a dedicated role; in the Anthropic API this is
+#                  represented as a user turn containing tool_result content blocks
 for i, msg in enumerate(messages):
     role = msg["role"]
     content = msg["content"]
     if isinstance(content, str):
-        # plain text message
         print(f"\n[{i}] role={role}: {content[:120]}")
     elif isinstance(content, list):
         for block in content:
             if hasattr(block, "type"):
-                # assistant block (SDK object)
                 if block.type == "tool_use":
                     print(f"\n[{i}] role={role} | tool_use: {block.name}({block.input})")
                 elif block.type == "text":
                     print(f"\n[{i}] role={role} | text: {block.text[:120]}")
             elif isinstance(block, dict):
-                # user tool_result dict
                 print(f"\n[{i}] role={role} | tool_result: {str(block.get('content',''))[:120]}")
-
-# Comments explaining each role in the ReAct loop:
-# role=user (first message)  — the human's original question
-# role=assistant (tool_use)  — LLM reasoning: decides which tool to call and with what args
-# role=user (tool_result)    — the observation: your code ran the tool, result sent back as user turn
-# role=assistant (text)      — final answer: LLM has all info it needs, writes the response
 
 # ---------------------------------------------------------------------------
 # Q7: Re-wrap compute_correlation as smolagents @tool — auto schema generation
