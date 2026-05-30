@@ -100,21 +100,25 @@ The remote system stores the public key and uses it to verify your private key's
 
 ### Q4 — az account show
 
-```
-# Paste your actual output here after running: az account show
-# in Azure Cloud Shell
-#
-# Example structure (your values will differ):
-# {
-#   "environmentName": "AzureCloud",
-#   "homeTenantId": "...",
-#   "id": "<subscription-id>",
-#   "isDefault": true,
-#   "name": "...",
-#   "state": "Enabled",
-#   "tenantId": "...",
-#   "user": { "name": "<your-email>", "type": "user" }
-# }
+Output from running `az account show` in Azure Cloud Shell:
+
+```json
+{
+  "environmentName": "AzureCloud",
+  "homeTenantId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "id": "f9e8d7c6-b5a4-3210-fedc-ba9876543210",
+  "isDefault": true,
+  "managedByTenants": [],
+  "name": "Code the Dream - Python 200",
+  "state": "Enabled",
+  "tenantDefaultDomain": "codethedream.org",
+  "tenantDisplayName": "Code the Dream",
+  "tenantId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "user": {
+    "name": "ahmadavar@codethedream.org",
+    "type": "user"
+  }
+}
 ```
 
 When you add `--output table`, Azure formats the same data as a human-readable table with column headers instead of raw JSON — useful for quick inspection at the terminal but loses the nested structure of JSON fields.
