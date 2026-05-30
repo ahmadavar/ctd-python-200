@@ -21,7 +21,16 @@
 
 ## Write-Up
 
-Scenario A costs only $1.66/month because the B1s is a burstable micro VM running part-time — practically free for light workloads. Scenario B was the real eye-opener: the GPU VM alone costs $2,233/month running 24/7, which is $26,800/year just for one machine. The script output matched the calculator exactly — Scenario B's VM costs 294x more than Scenario A's full monthly bill. Exploring further, I noticed that switching to a 1-year reserved instance on the NC6s_v3 drops the rate to $2.24/hr, saving over $600/month — a strong argument for commitments on long-running GPU workloads.
+Scenario A costs only $1.66/month because the B1s is a burstable micro VM running part-time — practically free for light workloads. Scenario B was the real eye-opener: the GPU VM alone costs $2,233.80/month running 24/7, which is $26,800/year just for one machine. Running `project_08.py` produced:
+
+```
+=== Monthly Cost Estimates ===
+Scenario A (lightweight):       $1.66
+Scenario B (GPU VM only):       $2233.80
+Scenario B VM costs 1342.4x more than Scenario A
+```
+
+This matched the Pricing Calculator exactly. The 1,342x ratio surprised me — I initially estimated a large gap but not that large. It comes from comparing monthly costs ($2,233.80 ÷ $1.664), not hourly rates. Exploring further, I noticed that switching to a 1-year reserved instance on the NC6s_v3 drops the rate to $2.24/hr, saving over $600/month — a strong argument for commitments on long-running GPU workloads.
 
 ## Video Walkthrough (Written)
 
