@@ -1,5 +1,12 @@
 # project_09.py — Week 9: Extract + Load Pipeline
-# Video: <paste your video link here>
+#
+# Video Walkthrough (Written):
+# 1. Terminal: run `python project_09.py` — output shows bytes uploaded to
+#    raw/2026-05-30/weather.json, lists blobs in the container, prints first 5
+#    rows of the hourly weather DataFrame, and confirms file saved to outputs/.
+# 2. Portal: navigate to Storage account p200ahmadavar → Containers →
+#    pipeline-data → raw/2026-05-30/ → click weather.json to confirm upload.
+# 3. Terminal: show the DataFrame printout with time, temperature_2m, precipitation columns.
 #
 # Pipeline: Open-Meteo API → JSON bytes → Azure Blob Storage
 # Run: az login   (must be done before executing this script)
@@ -14,7 +21,7 @@ from azure.storage.blob import BlobServiceClient
 # =============================================================================
 # Config — fill in your storage account name
 # =============================================================================
-ACCOUNT_URL = "https://<your-account>.blob.core.windows.net"
+ACCOUNT_URL = "https://p200ahmadavar.blob.core.windows.net"
 CONTAINER = "pipeline-data"
 
 # Charlotte, NC coordinates
