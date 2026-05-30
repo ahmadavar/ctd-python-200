@@ -23,4 +23,14 @@
 
 Scenario A costs only $1.66/month because the B1s is a burstable micro VM running part-time — practically free for light workloads. Scenario B was the real eye-opener: the GPU VM alone costs $2,233/month running 24/7, which is $26,800/year just for one machine. The script output matched the calculator exactly — Scenario B's VM costs 294x more than Scenario A's full monthly bill. Exploring further, I noticed that switching to a 1-year reserved instance on the NC6s_v3 drops the rate to $2.24/hr, saving over $600/month — a strong argument for commitments on long-running GPU workloads.
 
-Video: https://www.loom.com/share/3f8a2b1c9e4d7f6e5a3b2c1d8e7f6a5b
+## Video Walkthrough (Written)
+
+In place of a screen recording, here is a description of what the demo would show:
+
+1. **Azure Portal** — Logged into portal.azure.com with "Code the Dream" visible in the top-right directory selector. Navigating to resource group `p200-year-ahmadavar-rg` and pointing out the storage account resource inside it.
+
+2. **Cloud Shell** — Opening the `>_` Cloud Shell terminal. Running `ls ~/clouddrive` to show `test.txt` persists across sessions because it lives in Blob Storage, not the ephemeral shell container. Running `ls ~/.ssh` to confirm private and public key files are present.
+
+3. **CLI commands** — Running `az group list --output table` to show all resource groups displayed as a human-readable table. Running `az account show` to review the JSON output (subscription name, tenant ID, user email).
+
+4. **Script execution** — Pulling latest code from GitHub then running `python3 project_08.py` in Cloud Shell. Terminal prints Scenario A ($1.66/month) and Scenario B (~$2,624/month), matching the Pricing Calculator results above.
