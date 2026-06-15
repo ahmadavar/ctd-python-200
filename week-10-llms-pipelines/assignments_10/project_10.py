@@ -1,4 +1,4 @@
-# Video walkthrough: [PASTE VIDEO LINK HERE]
+# Video walkthrough: https://youtu.be/sUhgQUkVJxE?si=ibOxFkIg0hSRD-NJ
 #
 # Reflection (Step 6):
 # Classifying weather conditions for outdoor running is a borderline LLM use case.
