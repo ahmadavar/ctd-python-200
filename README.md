@@ -158,7 +158,9 @@ Moving data engineering workflows into the cloud using Azure Blob Storage.
 | Azure Blob Storage | azure-storage-blob SDK (CRUD operations) |
 | Cloud ETL — Extract & Load | REST API → Blob Storage pipeline |
 
-**Assignment:** Coming soon.
+**Assignment:** Video demo of Azure Blob Storage CRUD operations using the `azure-storage-blob` SDK — authenticate, upload, list, download, and delete blobs via Python.
+
+**Video:** [Week 9 — Quick Azure Blob Demo](https://youtu.be/sNAKMRrFtoc)
 
 ---
 
