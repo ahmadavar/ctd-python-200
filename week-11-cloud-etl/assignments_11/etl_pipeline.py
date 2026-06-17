@@ -1,4 +1,4 @@
-# Video walkthrough: [PASTE VIDEO LINK HERE]
+# Video walkthrough: https://youtu.be/rzA-i0REfwU
 #
 # Reflection:
 # Classifying weather conditions with an LLM is overkill for this task.
